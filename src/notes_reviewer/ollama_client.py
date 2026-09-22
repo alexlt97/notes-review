@@ -36,11 +36,47 @@ _RESPONSE_SCHEMA = {
     "additionalProperties": False,
 }
 
+# Work-note tags should describe concrete technical subjects. These broad
+# workflow labels do not help identify the technology or algorithm involved.
+_WORK_GENERIC_TAGS = frozenset({
+    "blocker",
+    "coding",
+    "completed",
+    "development",
+    "documentation",
+    "experiment",
+    "experiments",
+    "implementation",
+    "meeting",
+    "next-steps",
+    "planning",
+    "progress",
+    "project",
+    "programming",
+    "research",
+    "review",
+    "software",
+    "task",
+    "tasks",
+    "testing",
+    "update",
+    "updates",
+    "work",
+})
+
+_TAG_ALIASES = {
+    "c++": "cpp",
+    "c#": "csharp",
+    ".net": "dotnet",
+    "node.js": "nodejs",
+}
+
 
 def _clean_tags(raw_tags: list[str]) -> tuple[str, ...]:
     tags: list[str] = []
     for raw_tag in raw_tags:
         tag = raw_tag.strip().lower().lstrip("#")
+        tag = _TAG_ALIASES.get(tag, tag)
         tag = "-".join(part for part in tag.replace("_", "-").split() if part)
         tag = "".join(char for char in tag if char.isascii() and (char.isalnum() or char == "-"))
         tag = "-".join(part for part in tag.split("-") if part)
@@ -49,6 +85,16 @@ def _clean_tags(raw_tags: list[str]) -> tuple[str, ...]:
         if len(tags) == 6:
             break
     return tuple(tag for tag in tags if tag)
+
+
+def filter_work_tags(tags: tuple[str, ...]) -> tuple[str, ...]:
+    """Remove broad workflow labels from work-note tags.
+
+    The model is instructed to return technical subjects, but this second
+    filter keeps generic labels out of rendered work metadata if the model
+    returns one anyway.
+    """
+    return tuple(tag for tag in tags if tag not in _WORK_GENERIC_TAGS)
 
 
 def _validate_result(content: str) -> ModelResult:

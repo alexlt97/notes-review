@@ -30,6 +30,23 @@ _WORK_DAY_NAMES = {
 }
 
 
+def rank_work_tags(days: dict[str, ModelResult], limit: int = 6) -> tuple[str, ...]:
+    """Return the most frequent work tags, preserving first appearance on ties."""
+    counts: dict[str, int] = {}
+    first_seen: dict[str, int] = {}
+    position = 0
+    for result in days.values():
+        for tag in result.tags:
+            if tag not in counts:
+                counts[tag] = 0
+                first_seen[tag] = position
+                position += 1
+            counts[tag] += 1
+
+    ranked = sorted(counts, key=lambda tag: (-counts[tag], first_seen[tag]))
+    return tuple(ranked[:limit])
+
+
 def _yaml_string(value: str) -> str:
     return json.dumps(value, ensure_ascii=False)
 
@@ -114,15 +131,7 @@ def render_personal(result: ModelResult, *, note_date: str, model: str,
 def render_work(days: dict[str, ModelResult], *, week: int, year: int, model: str,
                 reviewed_at: datetime | None = None) -> str:
     timestamp = reviewed_at or datetime.now().astimezone()
-    tags: list[str] = []
-    for result in days.values():
-        for tag in result.tags:
-            if tag not in tags:
-                tags.append(tag)
-            if len(tags) == 6:
-                break
-        if len(tags) == 6:
-            break
+    tags = rank_work_tags(days)
 
     rendered_days = {
         day: _format_sections(result.markdown, heading_level=3)

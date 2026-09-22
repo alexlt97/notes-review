@@ -39,6 +39,8 @@ uv run notes-review --config /path/to/config.toml personal today
 
 Personal source notes are read from `Personal/YYYY-MM-DD.md`; refined notes are written to `Refined_Personal/YYYY-MM-DD.md`. Work sources use `Work/Week N.md`, and results go to `Refined_Work/Week N.md`. Work-day headings include the original day marker, full weekday name, and exact ISO date, such as `## M — Monday, 2026-09-21`. The refined folders are created beside `Personal/` and `Work/` as needed. A work week without `--year` uses the current ISO week-year. Re-running a command replaces the refined note. The source is never written to.
 
+Work-note tags favor concrete technologies, algorithms, libraries, frameworks, protocols, systems, and technical methods found in the source. Generic workflow and status labels are removed, and weekly tags are ranked by how often they occur during the week.
+
 `--dry-run` prints the generated note and does not create or replace an output file. Ollama requests go to the configured local URL; the tool does not use a cloud API.
 
 ## Obsidian ribbon plugin

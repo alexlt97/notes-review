@@ -10,7 +10,7 @@ from importlib.resources import files
 
 from .config import Config, require_vault_path
 from .models import ModelResult
-from .ollama_client import OllamaClient
+from .ollama_client import OllamaClient, filter_work_tags
 from .parser import parse_personal_note, parse_work_note
 from .paths import personal_output_path, personal_source_path, work_output_path, work_source_path
 from .renderer import render_personal, render_work
@@ -71,7 +71,8 @@ def review_work(config: Config, week: int, year: int, model_override: str | None
     refined_days: dict[str, ModelResult] = {}
     template = _prompt("work_review.md")
     for day, day_source in days.items():
-        refined_days[day] = _model_result(client, model=model, template=template, source=day_source)
+        result = _model_result(client, model=model, template=template, source=day_source)
+        refined_days[day] = ModelResult(result.markdown, filter_work_tags(result.tags))
 
     content = render_work(refined_days, week=week, year=year, model=model)
     return ReviewResult(content=content, destination=work_output_path(vault_path, week))
