@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "notes-reviewer"
+version = "0.1.0"
+description = "Refine local Obsidian notes with a local Ollama model"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+notes-review = "notes_reviewer.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+notes_reviewer = ["prompts/*.md"]
+
+[tool.uv]
+package = true
