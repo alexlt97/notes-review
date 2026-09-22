@@ -1,4 +1,4 @@
-const { Notice, Plugin, PluginSettingTab, Setting } = require("obsidian");
+const { Modal, Notice, Plugin, PluginSettingTab, Setting } = require("obsidian");
 const { spawn } = require("child_process");
 const fs = require("fs");
 const path = require("path");
@@ -18,6 +18,9 @@ module.exports = class NotesReviewerPlugin extends Plugin {
 		this.addRibbonIcon("calendar-check", "Review personal note for today", () => {
 			this.runReview(["personal", "today"], "personal note");
 		});
+		this.addRibbonIcon("calendar-search", "Choose a personal note to review", () => {
+			this.openPersonalDatePicker();
+		});
 		this.addRibbonIcon("briefcase", "Review the current work week", () => {
 			const { week, year } = getISOWeek(new Date());
 			this.runReview(["work", String(week), "--year", String(year)], `work week ${week}, ${year}`);
@@ -29,6 +32,11 @@ module.exports = class NotesReviewerPlugin extends Plugin {
 			callback: () => this.runReview(["personal", "today"], "personal note"),
 		});
 		this.addCommand({
+			id: "review-personal-date",
+			name: "Review a personal note for a date",
+			callback: () => this.openPersonalDatePicker(),
+		});
+		this.addCommand({
 			id: "review-current-work-week",
 			name: "Review the current work week",
 			callback: () => {
@@ -38,6 +46,16 @@ module.exports = class NotesReviewerPlugin extends Plugin {
 		});
 
 		this.addSettingTab(new NotesReviewerSettingTab(this.app, this));
+	}
+
+	openPersonalDatePicker() {
+		if (this.isRunning) {
+			new Notice("A notes review is already running.");
+			return;
+		}
+		new PersonalDateModal(this.app, (noteDate) => {
+			this.runReview(["personal", noteDate], `personal note for ${noteDate}`);
+		}).open();
 	}
 
 	async saveSettings() {
@@ -104,7 +122,8 @@ module.exports = class NotesReviewerPlugin extends Plugin {
 		child.on("close", (code) => {
 			this.isRunning = false;
 			if (code === 0) {
-				new Notice(`Review complete: ${label}.`, 6000);
+				const output = stdout.trim();
+				new Notice(`Review complete: ${label}.${output ? `\n${output}` : ""}`, 8000);
 				return;
 			}
 
@@ -113,6 +132,48 @@ module.exports = class NotesReviewerPlugin extends Plugin {
 		});
 	}
 };
+
+class PersonalDateModal extends Modal {
+	constructor(app, onSubmit) {
+		super(app);
+		this.onSubmit = onSubmit;
+	}
+
+	onOpen() {
+		const { contentEl } = this;
+		contentEl.empty();
+		contentEl.createEl("h2", { text: "Review a personal note" });
+		contentEl.createEl("p", { text: "Choose the date of the personal note to review." });
+
+		const dateInput = contentEl.createEl("input", {
+			attr: { type: "date", value: todayAsISODate() },
+		});
+		dateInput.addClass("notes-reviewer-date-input");
+
+		const actions = contentEl.createDiv("modal-button-container");
+		const cancel = actions.createEl("button", { text: "Cancel" });
+		cancel.addEventListener("click", () => this.close());
+		const submit = actions.createEl("button", { text: "Review", cls: "mod-cta" });
+		submit.addEventListener("click", () => {
+			const noteDate = dateInput.value;
+			if (!isISODate(noteDate)) {
+				new Notice("Choose a valid date in YYYY-MM-DD format.");
+				return;
+			}
+			this.close();
+			this.onSubmit(noteDate);
+		});
+		dateInput.addEventListener("keydown", (event) => {
+			if (event.key === "Enter") submit.click();
+			if (event.key === "Escape") this.close();
+		});
+		window.setTimeout(() => dateInput.focus(), 0);
+	}
+
+	onClose() {
+		this.contentEl.empty();
+	}
+}
 
 class NotesReviewerSettingTab extends PluginSettingTab {
 	constructor(app, plugin) {
@@ -155,6 +216,18 @@ class NotesReviewerSettingTab extends PluginSettingTab {
 function appendLimited(current, addition) {
 	if (current.length >= OUTPUT_LIMIT) return current;
 	return current + addition.slice(0, OUTPUT_LIMIT - current.length);
+}
+
+function todayAsISODate() {
+	const now = new Date();
+	return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
+function isISODate(value) {
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+	const [year, month, day] = value.split("-").map(Number);
+	const parsed = new Date(Date.UTC(year, month - 1, day));
+	return parsed.getUTCFullYear() === year && parsed.getUTCMonth() === month - 1 && parsed.getUTCDate() === day;
 }
 
 function getISOWeek(date) {

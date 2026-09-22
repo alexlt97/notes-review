@@ -43,7 +43,7 @@ Personal source notes are read from `Personal/YYYY-MM-DD.md`; refined notes are 
 
 ## Obsidian ribbon plugin
 
-The `obsidian-plugin/` folder contains a small desktop-only Obsidian plugin that runs the CLI directly. It adds ribbon buttons and command palette actions for today's personal note and the current work week. The plugin uses `uv`; it does not depend on the Shell Commands or Commander community plugins.
+The `obsidian-plugin/` folder contains a small desktop-only Obsidian plugin that runs the CLI directly. It adds ribbon buttons and command palette actions for today's personal note, a selected personal date, and the current work week. The plugin uses `uv`; it does not depend on the Shell Commands or Commander community plugins.
 
 To install it locally:
 
@@ -52,7 +52,7 @@ To install it locally:
 3. In Obsidian, enable community plugins if needed, reload the app, then enable **Notes Reviewer** in **Settings → Community plugins**.
 4. Open **Settings → Notes Reviewer**. Set **uv executable** to the full path to `uv` if needed, and **Project folder** to this project's full path (the folder containing `pyproject.toml` and `config.toml`).
 
-The plugin invokes `uv run --project <project-folder> notes-review ...` with shell execution disabled. Reviews still use the CLI's existing config and output behavior. Running on mobile is not supported because the plugin launches a local process.
+The plugin invokes `uv run --project <project-folder> notes-review ...` with shell execution disabled. Reviews still use the CLI's existing config and output behavior. Use the calendar-search ribbon button or the **Review a personal note for a date** command to choose any `YYYY-MM-DD` date. The completion notice includes the CLI's output path. Running on mobile is not supported because the plugin launches a local process.
 
 ## Tests
 
