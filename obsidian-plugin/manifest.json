@@ -1,0 +1,9 @@
+{
+  "id": "notes-reviewer",
+  "name": "Notes Reviewer",
+  "version": "0.1.0",
+  "minAppVersion": "1.5.0",
+  "description": "Run personal and weekly work note reviews from the ribbon.",
+  "author": "Local",
+  "isDesktopOnly": true
+}

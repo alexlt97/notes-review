@@ -1,0 +1,4 @@
+# Set this to the Obsidian vault root containing Personal/ and Work/.
+vault_path = ""
+default_model = "qwen3:14b"
+ollama_url = "http://127.0.0.1:11434" # Localhost style
